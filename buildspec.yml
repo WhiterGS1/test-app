@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin
+      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Deploying to EKS...
+      - sed -i 's|IMAGE_URI|'$REPOSITORY_URI:$IMAGE_TAG'|g' k8s-deployment.yaml
+      - kubectl apply -f k8s-deployment.yaml
