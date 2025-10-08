@@ -15,7 +15,8 @@ spec:
         app: myapp
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "80"
+        prometheus.io/port: "9113"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: myapp
@@ -29,6 +30,16 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
+      - name: nginx-exporter
+        image: nginx/nginx-prometheus-exporter:0.10.0
+        args:
+        - -nginx.scrape-uri=http://localhost:80/nginx_status
+        ports:
+        - containerPort: 9113
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "100m"
 ---
 apiVersion: v1
 kind: Service
