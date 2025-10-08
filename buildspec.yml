@@ -46,4 +46,4 @@ phases:
       - echo Deploying to EKS...
       - sed -i 's|IMAGE_URI|'$REPOSITORY_URI:$IMAGE_TAG'|g' k8s-deployment.yaml
       - kubectl apply -f k8s-deployment.yaml
-      - kubectl apply -f prometheus-grafana.yaml
+      - kubectl apply -f monitoring.yaml
