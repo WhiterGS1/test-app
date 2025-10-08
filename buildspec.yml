@@ -10,9 +10,17 @@ phases:
       - mv ./kubectl /usr/local/bin
       - |
         for i in {1..5}; do
-          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION && break
-          echo "Attempt $i failed, retrying in 10 seconds..."
-          sleep 10
+          if aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION; then
+            echo "Successfully configured kubectl"
+            break
+          else
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            if [ $i -eq 5 ]; then
+              echo "Failed to configure kubectl after 5 attempts"
+              exit 1
+            fi
+            sleep 10
+          fi
         done
 
   pre_build:
@@ -38,4 +46,4 @@ phases:
       - echo Deploying to EKS...
       - sed -i 's|IMAGE_URI|'$REPOSITORY_URI:$IMAGE_TAG'|g' k8s-deployment.yaml
       - kubectl apply -f k8s-deployment.yaml
-      - kubectl apply -f monitoring.yaml
+      - kubectl apply -f prometheus-grafana.yaml
