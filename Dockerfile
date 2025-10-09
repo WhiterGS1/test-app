@@ -1,5 +1,5 @@
 # Backend stage
-FROM python:3.9-slim as backend
+FROM public.ecr.aws/docker/library/python:3.9-slim as backend
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
