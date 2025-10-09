@@ -46,6 +46,8 @@ phases:
       - echo Deploying to EKS...
       - sed -i 's|IMAGE_URI|'$REPOSITORY_URI:$IMAGE_TAG'|g' k8s-deployment.yaml
       - kubectl apply -f k8s-deployment.yaml
+      - sed -i 's|BACKEND_IMAGE_URI|'$REPOSITORY_URI:$IMAGE_TAG'|g' backend-deployment.yaml
+      - kubectl apply -f backend-deployment.yaml
       - kubectl apply -f monitoring.yaml
       - echo "Starting port-forward for Grafana..."
       - nohup kubectl port-forward -n monitoring svc/grafana-service 3000:3000 --address 0.0.0.0 > /tmp/grafana-port-forward.log 2>&1 &
