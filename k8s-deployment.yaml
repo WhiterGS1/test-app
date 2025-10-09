@@ -6,11 +6,6 @@ metadata:
     app: myapp
 spec:
   replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   selector:
     matchLabels:
       app: myapp
@@ -26,7 +21,6 @@ spec:
       containers:
       - name: myapp
         image: IMAGE_URI
-        imagePullPolicy: Always
         ports:
         - containerPort: 80
         resources:
@@ -36,24 +30,6 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
-      - name: backend
-        image: python:3.9-slim
-        command: ["python", "backend.py"]
-        ports:
-        - containerPort: 5000
-        env:
-        - name: DB_HOST
-          value: "${aws_db_instance.app_database.endpoint}"
-        - name: DB_USER
-          value: "admin"
-        - name: DB_PASSWORD
-          value: "changeme123"
-        - name: DB_NAME
-          value: "appdb"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
       - name: nginx-exporter
         image: nginx/nginx-prometheus-exporter:0.10.0
         args:

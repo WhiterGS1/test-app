@@ -1,18 +1,19 @@
 from flask import Flask, request, jsonify
-import mysql.connector
+import psycopg2
+from psycopg2 import sql
 import os
 
 app = Flask(__name__)
 
-# Database connection details from environment variables
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '3306')
-DB_NAME = os.getenv('DB_NAME', 'appdb')
+# Database connection details from environment variables (set these in your env)
+DB_HOST = os.getenv('DB_HOST', 'localhost')  # Replace with RDS endpoint
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'mydatabase')
 DB_USER = os.getenv('DB_USER', 'admin')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'changeme123')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'yourpassword')  # Secure this!
 
 def get_db_connection():
-    conn = mysql.connector.connect(
+    conn = psycopg2.connect(
         host=DB_HOST,
         port=DB_PORT,
         database=DB_NAME,
@@ -32,8 +33,8 @@ def query_db():
         cur = conn.cursor()
 
         # Safe parameterized query to prevent SQL injection
-        sql_query = "SELECT * FROM items WHERE name LIKE %s"
-        cur.execute(sql_query, ('%' + query_term + '%',))
+        sql_query = sql.SQL("SELECT * FROM items WHERE name ILIKE {}").format(sql.Literal('%' + query_term + '%'))
+        cur.execute(sql_query)
         rows = cur.fetchall()
 
         # Convert rows to list of dicts
